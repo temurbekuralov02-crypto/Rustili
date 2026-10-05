@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rus Tili 2 Oyda — Kunlik Interaktiv Dastur</title>
+    <title>Rus Tili: 0 dan B1 gacha Intensive</title>
     <style>
         :root {
             --primary: #1e88e5;
@@ -61,6 +61,7 @@
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
         }
 
         .controls {
@@ -75,10 +76,6 @@
             border-radius: 6px;
             border: 1px solid #ccc;
             font-size: 15px;
-        }
-
-        .task-section {
-            margin-top: 20px;
         }
 
         .vocab-grid {
@@ -96,11 +93,20 @@
             text-align: center;
             cursor: pointer;
             transition: transform 0.2s;
+            position: relative;
         }
 
         .vocab-card:hover {
             transform: translateY(-2px);
             border-color: var(--primary);
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 5px;
         }
 
         .quiz-option {
@@ -117,9 +123,7 @@
             transition: background 0.2s;
         }
 
-        .quiz-option:hover {
-            background: #e1e9f0;
-        }
+        .quiz-option:hover { background: #e1e9f0; }
 
         .btn {
             background: var(--primary);
@@ -143,14 +147,68 @@
         }
         .correct { color: #2e7d32; background: #e8f5e9; }
         .incorrect { color: #c62828; background: #ffebee; }
+
+        /* AI Chatbot Styles */
+        .chat-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .chat-messages {
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fafafa;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: #4caf50;
+            color: white;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>🇷🇺 Rus Tili: 2 Oylik Intensive</h1>
-        <p>Har kunlik interaktiv mashqlar va testlar platformasi</p>
+        <h1>🇷🇺 Rus Tili: Interactive & AI Platform</h1>
+        <p>Har kunlik interaktiv mashqlar, ovozli talaffuz va AI Chatbot</p>
     </header>
 
     <div class="progress-box">
@@ -160,11 +218,12 @@
         </div>
     </div>
 
+    <!-- Darslar Qismi -->
     <div class="main-card">
         <div class="controls">
             <label for="day-select"><strong>Kunni tanlang:</strong></label>
             <select id="day-select" onchange="loadDayData()">
-                <!-- 60 kun yaratiladi -->
+                <!-- 60 kun -->
             </select>
             <button class="btn" onclick="markComplete()">Kunni yakunlash ✓</button>
         </div>
@@ -172,10 +231,10 @@
         <hr style="border:0; border-top: 1px solid #eee;">
 
         <div id="content-area">
-            <h2 id="day-title">1-Kun: Salomlashish va O'zini tanishtirish</h2>
+            <h2 id="day-title">1-Kun: Salomlashish va Tanishuv</h2>
             <p id="day-desc">Bugun eng muhim salomlashish iboralari va lug'at bilan tanishasiz.</p>
 
-            <h3>1. Lug'at (Ustiga bosing va o'qing):</h3>
+            <h3>1. Lug'at (Ovozni eshitish uchun 🔊 bosing):</h3>
             <div class="vocab-grid" id="vocab-container"></div>
 
             <h3>2. Interaktiv Mashq:</h3>
@@ -183,17 +242,29 @@
             <div id="feedback" class="feedback hidden"></div>
         </div>
     </div>
+
+    <!-- AI Muloqot Simulyatori -->
+    <div class="chat-box">
+        <h3>🤖 AI Rus Tili Muloqot Simulyatori</h3>
+        <p><small>Rus tilida yozing, AI siz bilan muloqot qiladi va xatolaringizni to'g'rilaydi:</small></p>
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg bot">Привет! Я твой помощник. Напиши мне что-нибудь на русском языке! 😊</div>
+        </div>
+        <div class="chat-input-group">
+            <input type="text" id="chat-input" placeholder="Ruscha biror narsa yozing..." onkeypress="handleKeyPress(event)">
+            <button class="btn" onclick="sendMessage()">Yuborish</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    // 2 oylik dastur ma'lumotlari (misol tariqasida shakllantirilgan bazasi)
     const curriculum = {
         1: {
             title: "1-Kun: Salomlashish va Tanishuv",
-            desc: "Bugungi darsda kundalik salomlashish va o'zini tanishtirish iboralarini o'rganamiz.",
+            desc: "Kundalik salomlashish va o'zini tanishtirish iboralari.",
             vocab: [
                 { ru: "Здравствуйте", uz: "Assalomu alaykum" },
-                { ru: "Привет", uz: "Salom (norasmiy)" },
+                { ru: "Привет", uz: "Salom" },
                 { ru: "Как дела?", uz: "Ishlar qanday?" },
                 { ru: "Меня зовут...", uz: "Mening ismim..." },
                 { ru: "Приятно познакомиться", uz: "Tanishganimdan xursandman" }
@@ -219,32 +290,13 @@
                 options: ["Привет", "Пока", "До свидания", "Пожалуйста"],
                 answer: 2
             }
-        },
-        3: {
-            title: "3-Kun: Olmoshlar (Местоимения)",
-            desc: "Kishilik olmoshlarini o'rganish.",
-            vocab: [
-                { ru: "Я", uz: "Men" },
-                { ru: "Ты", uz: "Sen" },
-                { ru: "Он / Она", uz: "U (u kishi / u qiz)" },
-                { ru: "Мы", uz: "Biz" },
-                { ru: "Вы", uz: "Siz" },
-                { ru: "Они", uz: "Ular" }
-            ],
-            quiz: {
-                question: "'Biz' so'zining ruscha tarjimasi qaysi?",
-                options: ["Я", "Вы", "Мы", "Они"],
-                answer: 2
-            }
         }
-        // Qolgan kunlar ham shu tizimda davom etadi
     };
 
-    // Qolgan kunlarni avtomatik to'ldirish generatori (60 kungacha)
-    for (let i = 4; i <= 60; i++) {
+    for (let i = 3; i <= 60; i++) {
         curriculum[i] = {
-            title: `${i}-Kun: Interaktiv Mashg'ulot`,
-            desc: `Bugungi kun uchun rejalashtirilgan yangi so'zlar va test mashg'ulotlari.`,
+            title: `${i}-Kun: Interaktiv Dars`,
+            desc: `Bugungi dars uchun mo'ljallangan so'zlar va mashqlar.`,
             vocab: [
                 { ru: `Слово ${i}-1`, uz: `So'z ${i}-1` },
                 { ru: `Слово ${i}-2`, uz: `So'z ${i}-2` },
@@ -262,6 +314,7 @@
 
     function init() {
         const select = document.getElementById('day-select');
+        select.innerHTML = '';
         for (let i = 1; i <= 60; i++) {
             const opt = document.createElement('option');
             opt.value = i;
@@ -279,17 +332,15 @@
         document.getElementById('day-title').innerText = data.title;
         document.getElementById('day-desc').innerText = data.desc;
 
-        // Vocab render
         const vocabBox = document.getElementById('vocab-container');
         vocabBox.innerHTML = '';
         data.vocab.forEach(v => {
             const card = document.createElement('div');
             card.className = 'vocab-card';
-            card.innerHTML = `<strong>${v.ru}</strong><br><small style="color:#666;">${v.uz}</small>`;
+            card.innerHTML = `<strong>${v.ru}</strong> <button class="audio-btn" onclick="speakText('${v.ru}')">🔊</button><br><small style="color:#666;">${v.uz}</small>`;
             vocabBox.appendChild(card);
         });
 
-        // Quiz render
         const quizBox = document.getElementById('quiz-container');
         quizBox.innerHTML = `<p><strong>${data.quiz.question}</strong></p>`;
         
@@ -302,6 +353,12 @@
         });
 
         document.getElementById('feedback').className = 'feedback hidden';
+    }
+
+    function speakText(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU';
+        window.speechSynthesis.speak(utterance);
     }
 
     function checkQuiz(selected, correct) {
@@ -330,6 +387,53 @@
         const percent = Math.round((completedDays.length / 60) * 100);
         document.getElementById('progress-bar').style.width = percent + '%';
         document.getElementById('progress-text').innerText = percent + '%';
+    }
+
+    // AI Chatbot Simulatsiyasi
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        input.value = '';
+
+        setTimeout(() => {
+            generateBotResponse(text);
+        }, 600);
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function addMessage(text, sender) {
+        const chat = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `msg ${sender}`;
+        div.innerText = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function generateBotResponse(userMsg) {
+        const msg = userMsg.toLowerCase();
+        let reply = "Отлично! Давай продолжим говорить по-русски. Как твои дела?";
+
+        if (msg.includes('привет') || msg.includes('здравствуйте')) {
+            reply = "Привет! Очень рад с тобой пообщаться. Как тебя зовут?";
+        } else if (msg.includes('как дела')) {
+            reply = "У меня всё отлично, спасибо! А у тебя как дела?";
+        } else if (msg.includes('хорошо') || msg.includes('отлично')) {
+            reply = "Замечательно! Какая сегодня у вас погода?";
+        } else if (msg.includes('меня зовут')) {
+            reply = "Очень приятно познакомиться! Чем ты увлекаешься?";
+        } else if (msg.includes('пока') || msg.includes('до свидания')) {
+            reply = "До свидания! Увидимся завтра на уроке!";
+        }
+
+        addMessage(reply, 'bot');
+        speakText(reply);
     }
 
     window.onload = init;
