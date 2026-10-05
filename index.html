@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rus Tili 2 Oyda — Kunlik Interaktiv Dastur</title>
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --success: #4caf50;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 { color: #1565c0; margin-bottom: 5px; }
+
+        .progress-box {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            background: var(--success);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        .task-section {
+            margin-top: 20px;
+        }
+
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .vocab-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .vocab-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f0f4f8;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        .quiz-option:hover {
+            background: #e1e9f0;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .btn:hover { background: #1565c0; }
+        .hidden { display: none; }
+        
+        .feedback {
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .correct { color: #2e7d32; background: #e8f5e9; }
+        .incorrect { color: #c62828; background: #ffebee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🇷🇺 Rus Tili: 2 Oylik Intensive</h1>
+        <p>Har kunlik interaktiv mashqlar va testlar platformasi</p>
+    </header>
+
+    <div class="progress-box">
+        <strong>Umumiy Progress:</strong> <span id="progress-text">0%</span>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="main-card">
+        <div class="controls">
+            <label for="day-select"><strong>Kunni tanlang:</strong></label>
+            <select id="day-select" onchange="loadDayData()">
+                <!-- 60 kun yaratiladi -->
+            </select>
+            <button class="btn" onclick="markComplete()">Kunni yakunlash ✓</button>
+        </div>
+
+        <hr style="border:0; border-top: 1px solid #eee;">
+
+        <div id="content-area">
+            <h2 id="day-title">1-Kun: Salomlashish va O'zini tanishtirish</h2>
+            <p id="day-desc">Bugun eng muhim salomlashish iboralari va lug'at bilan tanishasiz.</p>
+
+            <h3>1. Lug'at (Ustiga bosing va o'qing):</h3>
+            <div class="vocab-grid" id="vocab-container"></div>
+
+            <h3>2. Interaktiv Mashq:</h3>
+            <div id="quiz-container"></div>
+            <div id="feedback" class="feedback hidden"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 2 oylik dastur ma'lumotlari (misol tariqasida shakllantirilgan bazasi)
+    const curriculum = {
+        1: {
+            title: "1-Kun: Salomlashish va Tanishuv",
+            desc: "Bugungi darsda kundalik salomlashish va o'zini tanishtirish iboralarini o'rganamiz.",
+            vocab: [
+                { ru: "Здравствуйте", uz: "Assalomu alaykum" },
+                { ru: "Привет", uz: "Salom (norasmiy)" },
+                { ru: "Как дела?", uz: "Ishlar qanday?" },
+                { ru: "Меня зовут...", uz: "Mening ismim..." },
+                { ru: "Приятно познакомиться", uz: "Tanishganimdan xursandman" }
+            ],
+            quiz: {
+                question: "'Tanishganimdan xursandman' rus tilida qanday bo'ladi?",
+                options: ["Как дела?", "Приятно познакомиться", "До свидания", "Спасибо"],
+                answer: 1
+            }
+        },
+        2: {
+            title: "2-Kun: Ko'rishguncha va Rahmat",
+            desc: "Xayrlashuv va minnatdorchilik bildirish iboralari.",
+            vocab: [
+                { ru: "Спасибо", uz: "Rahmat" },
+                { ru: "Пожалуйста", uz: "Arzimaydi / Marhamat" },
+                { ru: "До свидания", uz: "Xayr (rasmiy)" },
+                { ru: "Пока", uz: "Xayr (norasmiy)" },
+                { ru: "Извините", uz: "Kechirasiz" }
+            ],
+            quiz: {
+                question: "Rasmiy xayrlashish iborasini tanlang:",
+                options: ["Привет", "Пока", "До свидания", "Пожалуйста"],
+                answer: 2
+            }
+        },
+        3: {
+            title: "3-Kun: Olmoshlar (Местоимения)",
+            desc: "Kishilik olmoshlarini o'rganish.",
+            vocab: [
+                { ru: "Я", uz: "Men" },
+                { ru: "Ты", uz: "Sen" },
+                { ru: "Он / Она", uz: "U (u kishi / u qiz)" },
+                { ru: "Мы", uz: "Biz" },
+                { ru: "Вы", uz: "Siz" },
+                { ru: "Они", uz: "Ular" }
+            ],
+            quiz: {
+                question: "'Biz' so'zining ruscha tarjimasi qaysi?",
+                options: ["Я", "Вы", "Мы", "Они"],
+                answer: 2
+            }
+        }
+        // Qolgan kunlar ham shu tizimda davom etadi
+    };
+
+    // Qolgan kunlarni avtomatik to'ldirish generatori (60 kungacha)
+    for (let i = 4; i <= 60; i++) {
+        curriculum[i] = {
+            title: `${i}-Kun: Interaktiv Mashg'ulot`,
+            desc: `Bugungi kun uchun rejalashtirilgan yangi so'zlar va test mashg'ulotlari.`,
+            vocab: [
+                { ru: `Слово ${i}-1`, uz: `So'z ${i}-1` },
+                { ru: `Слово ${i}-2`, uz: `So'z ${i}-2` },
+                { ru: `Слово ${i}-3`, uz: `So'z ${i}-3` }
+            ],
+            quiz: {
+                question: `Bugungi test topshirig'i (${i}-kun):`,
+                options: [`Variant A`, `Variant B`, `Variant C`],
+                answer: 0
+            }
+        };
+    }
+
+    let completedDays = JSON.parse(localStorage.getItem('completedDays')) || [];
+
+    function init() {
+        const select = document.getElementById('day-select');
+        for (let i = 1; i <= 60; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = `${i}-Kun` + (completedDays.includes(i) ? ' ✓' : '');
+            select.appendChild(opt);
+        }
+        updateProgress();
+        loadDayData();
+    }
+
+    function loadDayData() {
+        const day = document.getElementById('day-select').value;
+        const data = curriculum[day];
+
+        document.getElementById('day-title').innerText = data.title;
+        document.getElementById('day-desc').innerText = data.desc;
+
+        // Vocab render
+        const vocabBox = document.getElementById('vocab-container');
+        vocabBox.innerHTML = '';
+        data.vocab.forEach(v => {
+            const card = document.createElement('div');
+            card.className = 'vocab-card';
+            card.innerHTML = `<strong>${v.ru}</strong><br><small style="color:#666;">${v.uz}</small>`;
+            vocabBox.appendChild(card);
+        });
+
+        // Quiz render
+        const quizBox = document.getElementById('quiz-container');
+        quizBox.innerHTML = `<p><strong>${data.quiz.question}</strong></p>`;
+        
+        data.quiz.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-option';
+            btn.innerText = opt;
+            btn.onclick = () => checkQuiz(idx, data.quiz.answer);
+            quizBox.appendChild(btn);
+        });
+
+        document.getElementById('feedback').className = 'feedback hidden';
+    }
+
+    function checkQuiz(selected, correct) {
+        const fb = document.getElementById('feedback');
+        fb.classList.remove('hidden', 'correct', 'incorrect');
+        if (selected === correct) {
+            fb.innerText = "To'g'ri javob! Baraka topshing.";
+            fb.classList.add('correct');
+        } else {
+            fb.innerText = "Noto'g'ri. Qayta urinib ko'ring.";
+            fb.classList.add('incorrect');
+        }
+    }
+
+    function markComplete() {
+        const day = parseInt(document.getElementById('day-select').value);
+        if (!completedDays.includes(day)) {
+            completedDays.push(day);
+            localStorage.setItem('completedDays', JSON.stringify(completedDays));
+            init();
+            alert(`${day}-kun topshiriqlari muvaffaqiyatli yakunlandi!`);
+        }
+    }
+
+    function updateProgress() {
+        const percent = Math.round((completedDays.length / 60) * 100);
+        document.getElementById('progress-bar').style.width = percent + '%';
+        document.getElementById('progress-text').innerText = percent + '%';
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
